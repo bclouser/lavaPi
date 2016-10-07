@@ -1,65 +1,69 @@
 package main
 
 import (
+	"time"
 	"fmt"
-	"github.com/yosida95/golang-jenkins"
 	"github.com/stianeikeland/go-rpio"
+	"github.com/yosida95/golang-jenkins"
 )
 
+
+func setLavaLampPower(power bool){
+	fmt.Println("Modifying lava lamp power: ", power)
+	err := rpio.Open()
+	if err != nil {
+    	fmt.Println("Failed to initialize gpio library")
+    	return
+	}
+	pin := rpio.Pin(24)
+	pin.Output()       // Output mode
+
+	if power {
+		pin.High()        // Set pin High
+	} else {
+		pin.Low()         // Set pin Low
+	}
+
+	rpio.Close()
+	return
+}
 
 
 func main() {
 
-	// Lets see if we can get our gpio space opened up
-	err := rpio.Open()
-	if err != nil {
-		fmt.Println("Gpio failed to open");
+	currentTime := time.Now()
+	fmt.Println("Current hour is: ", currentTime.Hour())
+
+	// If it is the weekend, don't do anything. just peace
+
+	// if its before 7am or after 7pm. We should make sure the lamp is turned off
+	if (currentTime.Hour() < 7) || (currentTime.Hour() > 19) {
+		fmt.Println("Hour is unnacceptble, turning lava lamp off")
+		setLavaLampPower(false)
+		return
 	}
 
-	// GPIO 24 (Header pin 18)
-	pin := rpio.Pin(24)
-
-	pin.Output()       // Output mode
-	fmt.Println("setting pin high");
-	pin.High()         // Set pin High
-	// pin.Low()          // Set pin Low
-	// pin.Toggle()       // Toggle pin (Low -> High -> Low)
-
-
-	auth := & gojenkins.Auth{
-		Username: SecretUsername,
-		ApiToken: SecretApiToken,
+	auth := &gojenkins.Auth{
+	   Username: "bclouser",
+	   ApiToken: "167bff1f78bf1338f0bb21f3157744e7",
 	}
-
 	jenkins := gojenkins.NewJenkins(auth, "https://jen01.corp.tsafe.systems/")
 
-
-	/*jobs, err := jenkins.GetJobs()
-
-	if err != nil {
-		fmt.Errorf("error %v\n", err)
-	}
-
-	if len(jobs) == 0 {
-		fmt.Errorf("return no jobs\n")
-	}*/
-
-	job, err := jenkins.GetJob("kernel-rootfs")
+	job, err := jenkins.GetJob("rail")
 
 	if err != nil {
+		fmt.Println("Something bad happened")
 		fmt.Errorf("error %v\n", err)
+		return
 	}
 
-
+	// Job is buildable so we should make sure the lamp is off
 	if job.Buildable {
-		fmt.Println("Job is currently buildable!!!")
-	} else {
-		fmt.Println("Job is not currently buildable")
-	}
-
-
-
-
-
-
+		fmt.Println("Job is currently building")
+		setLavaLampPower(true)
+	} else { 
+		// Uh Oh, Job is not buildable... make sure lamp is on
+		fmt.Println("Job is not currently building")
+		setLavaLampPower(false)
+	}	
 }
