@@ -49,7 +49,9 @@ func main() {
 	}
 	jenkins := gojenkins.NewJenkins(auth, "https://jen01.corp.tsafe.systems/")
 
-	job, err := jenkins.GetJob("rail")
+	job, err := jenkins.GetJob("rail_rail-ux")
+
+	fmt.Println(job)
 
 	if err != nil {
 		fmt.Println("Something bad happened")
@@ -60,10 +62,10 @@ func main() {
 	// Job is buildable so we should make sure the lamp is off
 	if job.Buildable {
 		fmt.Println("Job is currently building")
-		setLavaLampPower(true)
+		setLavaLampPower(false)
 	} else { 
 		// Uh Oh, Job is not buildable... make sure lamp is on
 		fmt.Println("Job is not currently building")
-		setLavaLampPower(false)
+		setLavaLampPower(true)
 	}	
 }
