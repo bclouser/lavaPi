@@ -32,9 +32,13 @@ func setLavaLampPower(power bool){
 func main() {
 
 	currentTime := time.Now()
-	fmt.Println("Current hour is: ", currentTime.Hour())
+	fmt.Println("Its ", currentTime.Weekday(), "(", int(currentTime.Weekday()), ") Current hour is: ", currentTime.Hour())
 
 	// If it is the weekend, don't do anything. just peace
+	if int(currentTime.Weekday()) > 5 {
+		fmt.Println("Its the weekend, Not doing anything")
+		return
+	}
 
 	// if its before 7am or after 7pm. We should make sure the lamp is turned off
 	if (currentTime.Hour() < 7) || (currentTime.Hour() > 19) {
@@ -49,7 +53,7 @@ func main() {
 	}
 	jenkins := gojenkins.NewJenkins(auth, "https://jen01.corp.tsafe.systems/")
 
-	job, err := jenkins.GetJob("rail_rail-ux")
+	job, err := jenkins.GetJob("kernel-rootfs")
 
 	fmt.Println(job)
 
