@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// if its before 7am or after 7pm. We should make sure the lamp is turned off
-	if (currentTime.Hour() < 7) || (currentTime.Hour() > 19) {
+	if (currentTime.Hour() < 7) || (currentTime.Hour() >= 19) {
 		fmt.Println("Hour is unnacceptble, turning lava lamp off")
 		setLavaLampPower(false)
 		return
@@ -53,9 +53,22 @@ func main() {
 	}
 	jenkins := gojenkins.NewJenkins(auth, "https://jen01.corp.tsafe.systems/")
 
-	job, err := jenkins.GetJob("kernel-rootfs")
+	job, err := jenkins.GetJob("rail-kernel-rootfs-builder")
 
 	fmt.Println(job)
+
+	fmt.Println(job.Buildable)
+
+	fmt.Println("HealthReport:")
+	fmt.Println(job.HealthReport)
+
+
+	fmt.Println("LastCompletedBuild: ", job.LastCompletedBuild.Number)
+	fmt.Println("LastFailedBuild: ", job.LastFailedBuild.Number)
+	fmt.Println("LastStableBuild: ", job.LastStableBuild.Number)
+	fmt.Println("LastSuccessfulBuild: ", job.LastSuccessfulBuild.Number)
+	fmt.Println("LastUnstableBuild: ", job.LastUnstableBuild.Number)
+	fmt.Println("LastUnsuccessfulBuild: ", job.LastUnsuccessfulBuild.Number)
 
 	if err != nil {
 		fmt.Println("Something bad happened")
@@ -63,7 +76,15 @@ func main() {
 		return
 	}
 
-	// Job is buildable so we should make sure the lamp is off
+	if job.LastCompletedBuild.Number == job.LastUnsuccessfulBuild.Number {
+		fmt.Println("Build is currrently failing. Build: ", job.LastCompletedBuild.Number)
+		setLavaLampPower(true)
+	} else {
+		fmt.Println("Job is currently building")
+		setLavaLampPower(false)
+	}
+
+	/*// Job is buildable so we should make sure the lamp is off
 	if job.Buildable {
 		fmt.Println("Job is currently building")
 		setLavaLampPower(false)
@@ -71,5 +92,5 @@ func main() {
 		// Uh Oh, Job is not buildable... make sure lamp is on
 		fmt.Println("Job is not currently building")
 		setLavaLampPower(true)
-	}	
+	}	*/
 }
